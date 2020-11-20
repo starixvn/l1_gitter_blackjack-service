@@ -1,9 +1,9 @@
 export default {
-    hostingPort: 6003,
+    hostingPort: 6503,
     apiSettings: {
         enabledApi: true,
-        apiUrl: "http://10.2.189.51:6300",
-        authUrl: "http://10.2.189.51:6303",
+        apiUrl: "http://10.2.189.51:6310",
+        authUrl: "http://10.2.189.51:6313",
         client: {
             id: "game-server",
             secret: "gameserver@20luminet&",
@@ -14,9 +14,9 @@ export default {
         enabledApiLogs: true,
     },
     mainServerApiSettings: {
-        url: "http://10.2.189.51:7777/sit/main/api",
+        url: "http://10.2.189.51:7778/sit/main/api",
         auth: {
-            url: "http://10.2.189.51:6303",
+            url: "http://10.2.189.51:6313",
             id: "game-services",
             secret: "gameservices@20luminet&",
         },
@@ -32,7 +32,7 @@ export default {
     },
     enabledLogs: true,
     database: {
-        url: "mongodb://lmn_backend:LmnBackend%40517@10.99.99.187:27301/?replicaSet=SabaSIT",
+        url: "mongodb://lmn_backend:LmnBackend%40517@10.99.99.187:37301/?replicaSet=SabaL2SIT",
         options: {
             dbName: "minigame",
             useNewUrlParser: true,
@@ -40,7 +40,7 @@ export default {
         },
     },
     sentry: {
-        sentryUrl: "http://0fe6ee6fcc1440b6906d7b3eff11f732@10.99.99.187:800/132",
+        sentryUrl: "http://ee5983aa298646d4ad021cf2c0c1a9eb@10.99.99.187:800/168",
         logIdentifier: "blackjack",
         env: "SIT",
     },
@@ -50,12 +50,12 @@ export default {
     adminSecretKey: "asWDEerfOIdgsdqRTFabvmgh",
     enableCorsWs: true,
     corsUrls: [
-        "http://localhost:7456",
-        "http://sit.sabagame.com",
-        "https://sit.sabagame.com",
-        "https://sit-admg.sabagame.com",
-        "http://sit-adm.sabagame.com",
-        "https://sit-adm.sabagame.com",
+        "https://sit.sabagame.net",
+        "http://sit.sabagame.net",
+        "http://sit-admg.sabagame.net",
+        "https://sit-admg.sabagame.net",
+        "http://sit-adm.sabagame.net",
+        "https://sit-adm.sabagame.net",
     ],
-    roundMaxDuration: 1
+    roundMaxDuration: 1,
 };

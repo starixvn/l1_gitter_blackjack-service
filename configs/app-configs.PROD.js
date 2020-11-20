@@ -1,9 +1,9 @@
 export default {
-    hostingPort: 8003,
+    hostingPort: 0,
     apiSettings: {
         enabledApi: true,
-        apiUrl: "http://10.2.189.50:8300",
-        authUrl: "http://10.2.189.50:8303",
+        apiUrl: "http://10.99.99.51:8310",
+        authUrl: "http://10.99.99.51:8313",
         client: {
             id: "game-server",
             secret: "gameserver@20luminet&",
@@ -14,9 +14,9 @@ export default {
         enabledApiLogs: true,
     },
     mainServerApiSettings: {
-        url: "http://10.2.189.50:8888/main/api",
+        url: "http://10.99.99.51:8210/api",
         auth: {
-            url: "http://10.2.189.50:8303",
+            url: "http://10.99.99.51:8313",
             id: "game-services",
             secret: "gameservices@20luminet&",
         },
@@ -33,7 +33,7 @@ export default {
     enabledLogs: true,
     database: {
         url:
-            "mongodb://lmn_backend:M7K4ttH%2AtZ3ml%3F%29%7CA%5DjN4%3FLBhwF%266IO%3C@10.99.99.54:27101,10.99.99.53:27102/?replicaSet=SabaMain",
+            "mongodb://lmn_backend:%21%23x97%25uYZv%2A%5E%25%3E%7C%2Aqg%40E7FHi%3F9l%7B9r%3CK@10.99.99.53:37101,10.99.99.54:37102/?replicaSet=L2_SabaMain",
         options: {
             dbName: "minigame",
             useNewUrlParser: true,
@@ -42,7 +42,7 @@ export default {
         },
     },
     sentry: {
-        sentryUrl: "http://a983bd0c1502412887e17c2205e8bc70@10.99.99.187:803/110",
+        sentryUrl: "http://5e3ac415a1b0485eb78da0e7b0327225@10.99.99.187:803/118",
         logIdentifier: "blackjack",
         env: "PROD",
     },
@@ -52,18 +52,18 @@ export default {
     adminSecretKey: "asWDEer4yGdgsdqR4uqmKQZgh",
     enableCorsWs: true,
     corsUrls: [
-        "http://sabagame.com",
-        "http://www.sabagame.com",
-        "https://sabagame.com",
-        "https://www.sabagame.com",
-        "https://www.gamesaba.com",
-        "https://gamesaba.com",
-        "http://www.gamesaba.com",
-        "http://gamesaba.com",
-        "http://admg.sabagame.com",
-        "https://admg.sabagame.com",
-        "http://adm.sabagame.com",
-        "https://adm.sabagame.com",
+        "https://sabagame.net",
+        "https://www.sabagame.net",
+        "http://sabagame.net",
+        "http://www.sabagame.net",
+        "https://gamesaba.net",
+        "https://www.gamesaba.net",
+        "http://gamesaba.net",
+        "http://www.gamesaba.net",
+        "http://admg.sabagame.net",
+        "https://admg.sabagame.net",
+        "http://adm.sabagame.net",
+        "https://adm.sabagame.net",
     ],
     roundMaxDuration: 24,
 };
