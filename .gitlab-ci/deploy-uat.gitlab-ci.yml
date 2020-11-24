@@ -18,8 +18,8 @@ deploy_uat:
         SWARM_NODES: $SC_SWARM_CLUSTER_SIT
         SWARM_REPLICAS: 1
         NODE_LABEL: L2
-        DOCKER_PUBLIC_PORT: 7501
-        DOCKER_PRIVATE_PORT: 7501
+        DOCKER_PUBLIC_PORT: 7503
+        DOCKER_PRIVATE_PORT: 7503
         DOCKER_NETWORK_NAME: lumi-network
     environment:
         name: UAT
