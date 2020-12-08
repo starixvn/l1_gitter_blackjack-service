@@ -1,9 +1,9 @@
 export default {
-    hostingPort: 8503,
+    hostingPort: 5000,
     apiSettings: {
         enabledApi: true,
-        apiUrl: "http://10.99.99.51:8310",
-        authUrl: "http://10.99.99.51:8313",
+        apiUrl: "http://10.2.189.51:7310",
+        authUrl: "http://10.2.189.51:7313",
         client: {
             id: "game-server",
             secret: "gameserver@20luminet&",
@@ -14,9 +14,9 @@ export default {
         enabledApiLogs: true,
     },
     mainServerApiSettings: {
-        url: "http://10.99.99.51:8210/api",
+        url: "http://10.2.189.51:7778/uat/main/api",
         auth: {
-            url: "http://10.99.99.51:8313",
+            url: "http://10.2.189.51:7313",
             id: "game-services",
             secret: "gameservices@20luminet&",
         },
@@ -32,8 +32,7 @@ export default {
     },
     enabledLogs: true,
     database: {
-        url:
-            "mongodb://lmn_backend:%21%23x97%25uYZv%2A%5E%25%3E%7C%2Aqg%40E7FHi%3F9l%7B9r%3CK@10.99.99.53:37101,10.99.99.54:37102/?replicaSet=L2_SabaMain",
+        url: "mongodb://lmn_backend:LmnBackend%4022027@10.99.99.187:37201/?replicaSet=SabaL2UAT",
         options: {
             dbName: "minigame",
             useNewUrlParser: true,
@@ -49,21 +48,15 @@ export default {
     authenticateSettings: {
         audiences: ["api", "admin-api"],
     },
-    adminSecretKey: "asWDEer4yGdgsdqR4uqmKQZgh",
+    adminSecretKey: "asWDEerfOIdgsdqRTFabvmgh",
     enableCorsWs: true,
     corsUrls: [
-        "https://sabagame.net",
-        "https://www.sabagame.net",
-        "http://sabagame.net",
-        "http://www.sabagame.net",
-        "https://gamesaba.net",
-        "https://www.gamesaba.net",
-        "http://gamesaba.net",
-        "http://www.gamesaba.net",
-        "http://admg.sabagame.net",
-        "https://admg.sabagame.net",
-        "http://adm.sabagame.net",
-        "https://adm.sabagame.net",
+        "https://uat.sabagame.net",
+        "http://uat.sabagame.net",
+        "http://uat-admg.sabagame.net",
+        "https://uat-admg.sabagame.net",
+        "http://uat-adm.sabagame.net",
+        "https://uat-adm.sabagame.net",
     ],
     roundMaxDuration: 24,
 };
