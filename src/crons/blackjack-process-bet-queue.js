@@ -42,6 +42,8 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
         }
 
         const { betTracks } = this.gameData.ingame[player.profile.name];
+        this.gameData.ingame[player.profile.name].processing = false;
+
         if (betTracks.hands.every((hand) => hand.isStand) && betTracks.hands.length > 0) {
             await this.settleGameConsumer.settleRound(player.profile.name);
         } else {
@@ -73,6 +75,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
         for (const hand of _.uniqBy(payload.hands, (currentHand) => currentHand.pos)) {
             this.gameData.betId++;
             hand.id = this.gameData.betId;
+            hand.bet = hand.bet >> 0;
 
             const betInfo = {
                 amount: hand.bet,

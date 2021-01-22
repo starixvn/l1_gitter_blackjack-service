@@ -3,6 +3,7 @@ variables:
   SERVICE_NAME: l2-blackjack-service
   DOCKER_IMAGE_PATH: l2/game-services/blackjack-service
   
+  
 include:
   - project: "ci/luminet/common-ci"
     ref: L2
