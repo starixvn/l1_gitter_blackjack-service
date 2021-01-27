@@ -14,6 +14,6 @@ RUN npm install --loglevel verbose && npm cache clean --force
 ENV PATH /app/node_modules/.bin:$PATH
 
 COPY ./src/ .
-HEALTHCHECK --interval=10s CMD node healthcheck.js
+HEALTHCHECK --interval=10s CMD node --es-module-specifier-resolution=node healthcheck.js
 
 CMD [ "node", "--max-old-space-size=8192", "--es-module-specifier-resolution=node", "./app.js" ]
