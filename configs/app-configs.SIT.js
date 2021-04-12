@@ -14,7 +14,7 @@ export default {
         enabledApiLogs: true,
     },
     mainServerApiSettings: {
-        url: "http://l2_games_server_sit:5000/api",
+        url: "http://l2_game_server_sit:5000/api",
         auth: {
             url: "http://l2_auth_api_sit:5000",
             id: "game-services",
