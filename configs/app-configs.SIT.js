@@ -1,5 +1,5 @@
 export default {
-    hostingPort: 6503,
+    hostingPort: 5000,
     apiSettings: {
         enabledApi: true,
         apiUrl: "http://l2_game_api_sit:5000",
