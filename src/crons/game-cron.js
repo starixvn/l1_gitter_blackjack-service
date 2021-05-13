@@ -4,19 +4,42 @@ import { logger } from "sc-common";
 import { Core } from "sc-game-base";
 
 import appConfigs from "../app-configs";
-import BlackJackGameData from "../blackjack-game-data";
-import BlackjackGameDefinition from "../blackjack-game-definition";
 import gameSettings from "../game-settings";
 import { calculate } from "../helpers/card-helper";
 import { generateDecks } from "./../helpers/deck-helper";
 
-export default class GameCron extends Core.Cron.BaseGameCron {
+export default class GameCron extends Core.Crons.BaseGameCron {
     /**
      * @param {BlackjackGameDefinition} definition
      * @param {BlackJackGameData} gameData
      */
-    constructor(definition, gameData, bot, settleGameConsumer) {
-        super(definition, gameData, bot, settleGameConsumer);
+    constructor({
+        definition,
+        gameData,
+        bot,
+        settleGameRoundConsumer,
+        gameStatusPublisher,
+        runningRoundInfoPublisher,
+        logService,
+        gameConfigsRepository,
+        roundsRepository,
+        betsRepository,
+        archiveStatusesRepository
+    }) {
+        super({
+            definition,
+            gameData,
+            bot,
+            settleGameRoundConsumer,
+            gameStatusPublisher,
+            runningRoundInfoPublisher,
+            logService,
+            gameConfigsRepository,
+            roundsRepository,
+            archiveStatusesRepository
+        });
+
+        this.betsRepository = betsRepository;
     }
 
     async start() {
@@ -29,26 +52,46 @@ export default class GameCron extends Core.Cron.BaseGameCron {
             }
         );
 
-        const lastestBet = await this.definition.betRepository
+        const lastestBet = await this.betsRepository
             .findOne({}, "id", { sort: { id: -1 } })
             .lean()
             .exec();
 
         if (lastestBet) {
             this.gameData.betId = lastestBet.id + 1;
+        } else {
+            this.gameData.betId = await this.getLastArchiveBet();
+        }
+
+        const lastRound = await this.roundsRepository
+            .findOne({}, "id", { sort: { id: -1 } })
+            .lean()
+            .exec();
+
+        if (lastRound) {
+            this.gameData.roundId = lastRound.id + 1;
+        } else {
+            this.gameData.roundId = await this.getLastArchiveRound();
         }
 
         await this.initBetTracks();
         job.start();
     }
 
+    async getLastArchiveBet() {
+        const { configName } = this.definition;
+        const archiveStatus = await this.archiveStatusesRepository.findOne({ name: configName }, "lastArcId").lean().exec();
+
+        return archiveStatus ? archiveStatus.lastArcId["_cuocs"] + 1 : 1;
+    }
+
     async initBetTracks() {
-        const runningRounds = await this.definition.roundRepository.find({ ended: false }).lean().exec();
+        const runningRounds = await this.roundsRepository.find({ ended: false }).lean().exec();
 
         await Promise.all(
             runningRounds.map(async (round) => {
                 const usedCards = [...round.result];
-                const hands = await this.definition.betRepository.find({ phien: round.id }).lean().exec();
+                const hands = await this.betsRepository.find({ phien: round.id }).lean().exec();
                 const userHands = hands.map((hand) => {
                     usedCards.push(...hand.cards);
 

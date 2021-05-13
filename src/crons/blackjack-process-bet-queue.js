@@ -1,7 +1,6 @@
 import _ from "lodash";
-import { placeBet as placeBetApi } from "sc-base-apis";
 import { helpers } from "sc-common";
-import { Core } from "sc-game-base";
+import ProcessBetQueue from "sc-game-base/src/core/crons/process-bet-queue";
 
 import { cards } from "../card";
 import constants from "../constants";
@@ -10,16 +9,18 @@ import gameSettings from "../game-settings";
 import { calculate, calculateFinalValue, isAce, isBlackjack } from "../helpers/card-helper";
 import { generateDecks } from "../helpers/deck-helper";
 
-export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue {
+export default class BlackJackProcessBetQueue extends ProcessBetQueue {
     baseDeck = [...cards, ...cards, ...cards, ...cards, ...cards, ...cards];
     posOrder = [1, 4, 2, 5, 3, 6];
 
     /**
-     * @param {SettleGameConsumer} settleGameConsumer
+     * @param {SettleGameConsumer} settleGameRoundConsumer
      */
-    constructor(definition, gameData, settleGameConsumer) {
-        super(definition, gameData);
-        this.settleGameConsumer = settleGameConsumer;
+    constructor({ definition, gameData, placeBetPublisher, placeBet, logService, betsRepository, betLogsRepository, userInfosRepository, settleGameRoundConsumer, roundsRepository }) {
+        
+        super({ definition, gameData, placeBetPublisher, placeBet, logService, betsRepository, betLogsRepository, userInfosRepository });
+        this.settleGameRoundConsumer = settleGameRoundConsumer;
+        this.roundsRepository = roundsRepository;
     }
 
     async proceedBet(player, payload) {
@@ -45,7 +46,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
         this.gameData.ingame[player.profile.name].processing = false;
 
         if (betTracks.hands.every((hand) => hand.isStand) && betTracks.hands.length > 0) {
-            await this.settleGameConsumer.settleRound(player.profile.name);
+            await this.settleGameRoundConsumer.settleRound(player.profile.name);
         } else {
             this.updateActiveHand(player);
         }
@@ -63,6 +64,24 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
         }
     }
 
+    async checkUserStakeChange(apiResult, player) {
+        const { response } = apiResult;
+        
+        if (apiResult.isOk) {
+            if (player.profile.minBet !== response.minBet || player.profile.maxBet !== response.maxBet) {
+                await this.updateUserStakeLevel(player, response.minBet, response.maxBet);
+            }
+        } else {
+            if (
+                (player.profile.minBet !== response.apiError?.minBet || player.profile.maxBet !== response.apiError?.maxBet) &&
+                response.apiError?.minBet > 0 &&
+                response.apiError?.maxBet > 0
+            ) {
+                await this.updateUserStakeLevel(player, response.apiError.minBet, response.apiError.maxBet);
+            }
+        }
+    }
+
     async processDeal(player, payload) {
         const { betTracks } = this.gameData.ingame[player.profile.name];
         betTracks.dealer = { cards: [] };
@@ -73,8 +92,8 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
         const failedHands = [];
 
         for (const hand of _.uniqBy(payload.hands, (currentHand) => currentHand.pos)) {
-            this.gameData.betId++;
             hand.id = this.gameData.betId;
+            this.gameData.betId++;
             hand.bet = hand.bet >> 0;
 
             const betInfo = {
@@ -83,7 +102,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
                 gameRoundId: hand.id,
             };
 
-            const apiResult = await placeBetApi({ id: player.UID, session: player.session }, betInfo);
+            const apiResult = await this.placeBet({ id: player.UID, session: player.session }, betInfo);
 
             if (apiResult.isOk) {
                 betTracks.hands.push({ betwin: 0, cards: [], actions: [], ...hand });
@@ -92,6 +111,8 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
             } else {
                 failedHands.push({ pos: hand.pos, apiResult });
             }
+
+            await this.checkUserStakeChange(apiResult, player);
         }
 
         if (failedHands.length > 0) {
@@ -106,7 +127,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
             betTracks.activeHandId = betTracks.hands.find((hand) => !hand.isStand)?.id;
 
             await this.createRoundAndHandEntities(player);
-            this.publisher.publishToUser(player.UID, {
+            this.placeBetPublisher.publishToUser(player.UID, {
                 deal: {
                     roundId: betTracks.roundId,
                     totalAmount: totalBet,
@@ -124,7 +145,8 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
         const { betTracks } = this.gameData.ingame[player.profile.name];
         const { odds } = this.gameData.gameConfigs;
 
-        const newRound = await this.definition.roundRepository.create({
+        const newRound = await this.roundsRepository.create({
+            id: this.gameData.roundId,
             result: betTracks.dealer.cards,
             roundStartTime: new Date(),
             uid: player.UID,
@@ -132,7 +154,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
             odds,
         });
         betTracks.roundId = newRound.id;
-        this.gameData.roundId = newRound.id;
+        this.gameData.roundId++;
 
         const betEntities = betTracks.hands.map((hand) => ({
             id: hand.id,
@@ -150,7 +172,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
             actions: hand.actions,
         }));
 
-        await this.definition.betRepository.insertMany(betEntities);
+        await this.betsRepository.insertMany(betEntities);
     }
 
     async processDouble(player, payload) {
@@ -162,7 +184,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
             gameRoundId: hand.id,
         };
 
-        const apiResult = await placeBetApi({ id: player.UID, session: player.session }, betInfo);
+        const apiResult = await this.placeBet({ id: player.UID, session: player.session }, betInfo);
 
         if (apiResult.isOk) {
             const newCard = betTracks.deck.shift();
@@ -172,7 +194,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
             hand.isStand = true;
             hand.actions.push(gameSettings.actions.double, gameSettings.actions.stand);
 
-            const bet = await this.definition.betRepository.findOne({ id: hand.id }).exec();
+            const bet = await this.betsRepository.findOne({ id: hand.id }).exec();
             bet.bet = hand.bet;
             bet.cards = hand.cards;
             bet.total = calculateFinalValue(hand.cards);
@@ -180,7 +202,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
             bet.actions.push(gameSettings.actions.double, gameSettings.actions.stand);
             await bet.save();
 
-            this.publisher.publishToUser(player.UID, {
+            this.placeBetPublisher.publishToUser(player.UID, {
                 double: {
                     newCard,
                     ...hand,
@@ -191,13 +213,15 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
         } else {
             this.handleFailPlaceBetResponse(player, apiResult);
         }
+
+        await this.checkUserStakeChange(apiResult, player);
     }
 
     async processSplit(player, payload) {
         const { betTracks } = this.gameData.ingame[player.profile.name];
         const hand = betTracks.hands.find((currentHand) => currentHand.id === payload.id);
-        this.gameData.betId++;
         const newHandId = this.gameData.betId;
+        this.gameData.betId++;
 
         const betInfo = {
             amount: hand.bet,
@@ -205,13 +229,15 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
             gameRoundId: newHandId,
         };
 
-        const apiResult = await placeBetApi({ id: player.UID, session: player.session }, betInfo);
+        const apiResult = await this.placeBet({ id: player.UID, session: player.session }, betInfo);
 
         if (apiResult.isOk) {
             await this.splitSelectedHand(player, hand, newHandId, apiResult.response);
         } else {
             this.handleFailPlaceBetResponse(player, apiResult);
         }
+
+        await this.checkUserStakeChange(apiResult, player);
     }
 
     async splitSelectedHand(player, hand, newHandId, balance) {
@@ -226,7 +252,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
             hand.isStand = true;
         }
 
-        const bet = await this.definition.betRepository.findOne({ id: hand.id }).exec();
+        const bet = await this.betsRepository.findOne({ id: hand.id }).exec();
         bet.bet = hand.bet;
         bet.cards = hand.cards;
         bet.total = calculateFinalValue(hand.cards);
@@ -259,7 +285,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
         betTracks.hands.push(splitHand);
         betTracks.hands.sort((hand1, hand2) => gameSettings.posOrder.indexOf(hand1.pos) - gameSettings.posOrder.indexOf(hand2.pos));
 
-        await this.definition.betRepository.create({
+        await this.betsRepository.create({
             id: splitHand.id,
             phien: betTracks.roundId,
             uid: player.UID,
@@ -276,7 +302,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
             splitFrom: splitHand.splitFrom,
         });
 
-        this.publisher.publishToUser(player.UID, {
+        this.placeBetPublisher.publishToUser(player.UID, {
             split: {
                 hands: [hand, splitHand],
             },
@@ -293,7 +319,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
         hand.total = calculate(hand.cards);
         hand.actions.push(gameSettings.actions.hit);
 
-        const bet = await this.definition.betRepository.findOne({ id: hand.id }).exec();
+        const bet = await this.betsRepository.findOne({ id: hand.id }).exec();
         bet.cards = hand.cards;
         bet.total = calculateFinalValue(bet.cards);
         bet.softPoints = calculate(bet.cards);
@@ -306,7 +332,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
         }
 
         await bet.save();
-        this.publisher.publishToUser(player.UID, { hit: { newCard, ...hand } });
+        this.placeBetPublisher.publishToUser(player.UID, { hit: { newCard, ...hand } });
     }
 
     async processStand(player, payload) {
@@ -316,12 +342,12 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
         hand.total = calculate(hand.cards);
         hand.actions.push(gameSettings.actions.stand);
 
-        const bet = await this.definition.betRepository.findOne({ id: hand.id }).exec();
+        const bet = await this.betsRepository.findOne({ id: hand.id }).exec();
         bet.actions.push(gameSettings.actions.stand);
         bet.total = calculateFinalValue(hand.cards);
 
         await bet.save();
-        this.publisher.publishToUser(player.UID, { stand: { ...hand } });
+        this.placeBetPublisher.publishToUser(player.UID, { stand: { ...hand } });
     }
 
     handleFailPlaceBetResponse(player, apiResult) {
@@ -385,7 +411,7 @@ export default class BlackJackProcessBetQueue extends Core.Cron.ProcessBetQueue 
             blackjackNotice.kickedOutHands = kickedOutHands;
         }
 
-        this.publisher.publishGameFailedBet(player.UID, { endBet: -1, blackjackNotice });
+        this.placeBetPublisher.publishGameFailedBet(player.UID, { endBet: -1, blackjackNotice });
     }
 
     dealCards({ dealer, hands, deck }) {
