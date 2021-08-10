@@ -41,7 +41,7 @@ export default {
         },
     },
     sentry: {
-        sentryUrl: "http://5e3ac415a1b0485eb78da0e7b0327225@10.99.99.187:803/118",
+        sentryUrl: "http://2b5b82bf699543ddb296364568bc30be@10.2.189.50:9009/52",
         logIdentifier: "blackjack",
         env: "PROD",
     },
