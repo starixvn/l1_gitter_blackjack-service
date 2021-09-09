@@ -52,4 +52,8 @@ export default {
     enableCorsWs: true,
     corsUrls: ["http://localhost:7456", "https://l2-games.lumigame.com", "https://l2-admin.lumigame.com", "http://localhost:7000"],
     roundMaxDuration: 1,
+    metrics: {
+        enable: true,
+        secretKey: "6c1f0f28-70f2-46ae-b031-22624a6cd8df",
+    },
 };
