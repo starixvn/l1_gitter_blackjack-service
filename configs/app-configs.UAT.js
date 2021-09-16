@@ -51,12 +51,16 @@ export default {
     adminSecretKey: "asWDEerfOIdgsdqRTFabvmgh",
     enableCorsWs: true,
     corsUrls: [
-        "http://uat.v-gaming.net",
-        "https://uat.v-gaming.net",
-        "http://uatadm.v-gaming.net",
-        "https://uatadm.v-gaming.net",
-        "http://muat.v-gaming.net",
-        "https://muat.v-gaming.net",
+        "http://l2uat.sgamesuat.com",
+        "https://l2uat.sgamesuat.com",
+        "http://l2uatadm.sgamesuat.com",
+        "https://l2uatadm.sgamesuat.com",
+        "http://l2uatm.sgamesuat.com",
+        "https://l2uatm.sgamesuat.com",
     ],
     roundMaxDuration: 24,
+    metrics: {
+        enable: true,
+        secretKey: "6c1f0f28-70f2-46ae-b031-22624a6cd8df",
+    },
 };

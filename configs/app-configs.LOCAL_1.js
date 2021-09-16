@@ -41,7 +41,7 @@ export default {
         },
     },
     sentry: {
-        sentryUrl: "https://13f39b8359404ed5aec23655e64ccf78@sentry.lumigame.com/2",
+        sentryUrl: "https://acb36eb835d948d68c1aad9873754d51@sentry.lumigame.com/27",
         logIdentifier: "blackjack",
         env: "LOCAL-1",
     },
@@ -52,4 +52,8 @@ export default {
     enableCorsWs: true,
     corsUrls: ["http://localhost:7456", "https://l2-games1.lumigame.com", "https://l2-admin1.lumigame.com", "http://localhost:7000"],
     roundMaxDuration: 1,
+    metrics: {
+        enable: true,
+        secretKey: "6c1f0f28-70f2-46ae-b031-22624a6cd8df",
+    },
 };
