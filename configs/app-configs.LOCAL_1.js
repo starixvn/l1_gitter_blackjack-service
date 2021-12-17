@@ -29,6 +29,7 @@ export default {
         pingTimeout: 60 * 1000,
         transports: ["websocket"],
         allowUpgrades: false,
+        perMessageDeflate: false,
     },
     enabledLogs: true,
     database: {
@@ -43,15 +44,25 @@ export default {
     sentry: {
         sentryUrl: "https://acb36eb835d948d68c1aad9873754d51@sentry.lumigame.com/27",
         logIdentifier: "blackjack",
-        env: "LOCAL-1",
+        env: "LOCAL_1",
     },
     authenticateSettings: {
         audiences: ["api", "admin-api"],
     },
     adminSecretKey: "asWDEerfOIdgsdqRTFabvmgh",
-    enableCorsWs: true,
-    corsUrls: ["http://localhost:7456", "https://l2-games1.lumigame.com", "https://l2-admin1.lumigame.com", "http://localhost:7000"],
-    roundMaxDuration: 1,
+    enableCorsWs: false,
+    corsUrls: [
+        "http://localhost:7456",
+        "http://l2-games1.lumigame.com",
+        "http://l2-admin1.lumigame.com",
+        "http://localhost:7000",
+        "http://l2-m1.lumigame.com",
+        "http://localhost:3000",
+        "http://10.6.10.176:3000",
+        "https://l2-games1.lumigame.com",
+        "https://l2-admin1.lumigame.com",
+        "https://l2-m1.lumigame.com",
+    ],
     metrics: {
         enable: true,
         secretKey: "6c1f0f28-70f2-46ae-b031-22624a6cd8df",
