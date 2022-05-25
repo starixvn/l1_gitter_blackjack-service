@@ -1,6 +1,6 @@
 FROM registry.nexdev.net:5050/docker/node:14.15.1-slim
 
-USER root
+USER node
 
 ARG NODE_ENV=production
 ENV NODE_ENV $NODE_ENV
